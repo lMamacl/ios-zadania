@@ -10,14 +10,14 @@ struct PersonFormView: View {
 
     @State private var firstName: String
     @State private var lastName: String
-    @State private var hasBirthDate: Bool
+    @State private var podanoDateUrodzenia: Bool
     @State private var birthDate: Date
     @State private var phone: String
     @State private var email: String
     @State private var address: String
 
-    @State private var attemptedSave = false
-    @State private var showErrorAlert = false
+    @State private var probaZapisu = false
+    @State private var pokazAlertBledu = false
 
     init(title: String, person: Person? = nil, onSave: @escaping (Person) -> Void) {
         self.title = title
@@ -25,7 +25,7 @@ struct PersonFormView: View {
         self.onSave = onSave
         _firstName = State(initialValue: person?.firstName ?? "")
         _lastName = State(initialValue: person?.lastName ?? "")
-        _hasBirthDate = State(initialValue: person?.birthDate != nil)
+        _podanoDateUrodzenia = State(initialValue: person?.birthDate != nil)
         _birthDate = State(initialValue: person?.birthDate ?? PersonFormView.defaultBirthDate)
         _phone = State(initialValue: person?.phone ?? "")
         _email = State(initialValue: person?.email ?? "")
@@ -39,7 +39,7 @@ struct PersonFormView: View {
     private var issues: [ValidationIssue] {
         PersonValidator.validate(firstName: firstName,
                                  lastName: lastName,
-                                 birthDate: hasBirthDate ? birthDate : nil,
+                                 birthDate: podanoDateUrodzenia ? birthDate : nil,
                                  phone: phone,
                                  email: email)
     }
@@ -57,8 +57,8 @@ struct PersonFormView: View {
                 }
 
                 Section("Data urodzenia (opcjonalnie)") {
-                    Toggle("Podaj datę urodzenia", isOn: $hasBirthDate)
-                    if hasBirthDate {
+                    Toggle("Podaj datę urodzenia", isOn: $podanoDateUrodzenia)
+                    if podanoDateUrodzenia {
                         DatePicker("Data urodzenia",
                                    selection: $birthDate,
                                    in: ...Date(),
@@ -82,7 +82,7 @@ struct PersonFormView: View {
                         .textContentType(.fullStreetAddress)
                 }
 
-                if attemptedSave && !issues.isEmpty {
+                if probaZapisu && !issues.isEmpty {
                     Section("Błędy w formularzu") {
                         ForEach(issues) { issue in
                             Text("• \(issue.message)")
@@ -102,7 +102,7 @@ struct PersonFormView: View {
                     Button("Zapisz") { save() }
                 }
             }
-            .alert("Popraw błędy w formularzu", isPresented: $showErrorAlert) {
+            .alert("Popraw błędy w formularzu", isPresented: $pokazAlertBledu) {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text(issues.map { "• \($0.message)" }.joined(separator: "\n"))
@@ -112,7 +112,7 @@ struct PersonFormView: View {
 
     @ViewBuilder
     private func errorText(for field: ValidationIssue.Field) -> some View {
-        if attemptedSave {
+        if probaZapisu {
             ForEach(issues.filter { $0.field == field }) { issue in
                 Text(issue.message)
                     .font(.footnote)
@@ -122,15 +122,15 @@ struct PersonFormView: View {
     }
 
     private func save() {
-        attemptedSave = true
+        probaZapisu = true
         guard issues.isEmpty else {
-            showErrorAlert = true      // all errors are listed; nothing is saved
+            pokazAlertBledu = true      // wszystkie błędy są wylistowane; nic nie zapisujemy
             return
         }
         let person = Person(id: originalID ?? UUID(),
                             firstName: firstName.trimmed,
                             lastName: lastName.trimmed,
-                            birthDate: hasBirthDate ? birthDate : nil,
+                            birthDate: podanoDateUrodzenia ? birthDate : nil,
                             phone: phone.trimmed,
                             email: email.trimmed,
                             address: address.trimmed)

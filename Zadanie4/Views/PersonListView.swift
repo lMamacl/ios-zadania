@@ -2,8 +2,8 @@ import SwiftUI
 
 struct PersonListView: View {
     @EnvironmentObject private var store: PersonStore
-    @State private var showingAdd = false
-    @State private var personToDelete: Person?
+    @State private var pokazDodawanie = false
+    @State private var osobaDoUsuniecia: Person?
 
     var body: some View {
         NavigationStack {
@@ -22,7 +22,7 @@ struct PersonListView: View {
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button("Usuń", role: .destructive) {
-                            personToDelete = person
+                            osobaDoUsuniecia = person
                         }
                     }
                 }
@@ -37,24 +37,24 @@ struct PersonListView: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        showingAdd = true
+                        pokazDodawanie = true
                     } label: {
                         Image(systemName: "plus")
                     }
                     .accessibilityLabel("Dodaj osobę")
                 }
             }
-            .sheet(isPresented: $showingAdd) {
+            .sheet(isPresented: $pokazDodawanie) {
                 PersonFormView(title: "Nowa osoba") { store.add($0) }
             }
             .confirmationDialog(
                 "Czy na pewno usunąć tę osobę?",
                 isPresented: Binding(
-                    get: { personToDelete != nil },
-                    set: { if !$0 { personToDelete = nil } }
+                    get: { osobaDoUsuniecia != nil },
+                    set: { if !$0 { osobaDoUsuniecia = nil } }
                 ),
                 titleVisibility: .visible,
-                presenting: personToDelete
+                presenting: osobaDoUsuniecia
             ) { person in
                 Button("Usuń \(person.fullName)", role: .destructive) {
                     store.delete(person)

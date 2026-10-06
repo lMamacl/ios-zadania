@@ -1,43 +1,43 @@
 import SwiftUI
 
 struct ContentView: View {
-    // The name that triggers the extra message ("We have the same name").
-    private let myName = "Maciej"
+    // Imię, które wyzwala dodatkowy komunikat ("Mamy to samo imię").
+    private let mojeImie = "Maciej"
 
-    @State private var firstName: String = ""
-    @State private var surname: String = ""
-    @State private var message: String = "Hello"
+    @State private var imie: String = ""
+    @State private var nazwisko: String = ""
+    @State private var wiadomosc: String = "Witaj"
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 10) {
-                TextField("Enter your name", text: $firstName)
+                TextField("Wpisz swoje imię", text: $imie)
                     .textInputAutocapitalization(.words)
                     .autocorrectionDisabled()
                     .padding(10)
                     .background(Color(.systemGray6))
                     .cornerRadius(10)
-                    .onChange(of: firstName) { _, newValue in
-                        message = updateMessage(newFirstName: newValue, newSurname: surname)
+                    .onChange(of: imie) { _, nowaWartosc in
+                        wiadomosc = aktualizujWiadomosc(noweImie: nowaWartosc, noweNazwisko: nazwisko)
                     }
 
-                TextField("Enter your surname", text: $surname)
+                TextField("Wpisz swoje nazwisko", text: $nazwisko)
                     .textInputAutocapitalization(.words)
                     .autocorrectionDisabled()
                     .padding(10)
                     .background(Color(.systemGray6))
                     .cornerRadius(10)
-                    .onChange(of: surname) { _, newValue in
-                        message = updateMessage(newFirstName: firstName, newSurname: newValue)
+                    .onChange(of: nazwisko) { _, nowaWartosc in
+                        wiadomosc = aktualizujWiadomosc(noweImie: imie, noweNazwisko: nowaWartosc)
                     }
 
-                Text(message)
+                Text(wiadomosc)
                     .fontWeight(.semibold)
                     .multilineTextAlignment(.center)
                     .padding(10)
 
-                NavigationLink(destination: SecondView(surname: $surname)) {
-                    Text("Go to the second view")
+                NavigationLink(destination: DrugiWidok(nazwisko: $nazwisko)) {
+                    Text("Przejdź do drugiego widoku")
                         .frame(maxWidth: .infinity)
                         .padding(10)
                         .background(Color.green)
@@ -47,20 +47,20 @@ struct ContentView: View {
             }
             .padding(.horizontal, 30)
             .onAppear {
-                message = updateMessage(newFirstName: firstName, newSurname: surname)
+                wiadomosc = aktualizujWiadomosc(noweImie: imie, noweNazwisko: nazwisko)
             }
         }
     }
 
-    func updateMessage(newFirstName: String, newSurname: String) -> String {
-        let cleanFirst = newFirstName.trimmingCharacters(in: .whitespaces)
-        let cleanSurname = newSurname.trimmingCharacters(in: .whitespaces)
-        let fullName = [cleanFirst, cleanSurname].filter { !$0.isEmpty }.joined(separator: " ")
-        let greeting = fullName.isEmpty ? "Hello" : "Hello \(fullName)"
-        if !cleanFirst.isEmpty && cleanFirst.caseInsensitiveCompare(myName) == .orderedSame {
-            return greeting + "! We have the same name"
+    func aktualizujWiadomosc(noweImie: String, noweNazwisko: String) -> String {
+        let czysteImie = noweImie.trimmingCharacters(in: .whitespaces)
+        let czysteNazwisko = noweNazwisko.trimmingCharacters(in: .whitespaces)
+        let pelneDane = [czysteImie, czysteNazwisko].filter { !$0.isEmpty }.joined(separator: " ")
+        let powitanie = pelneDane.isEmpty ? "Witaj" : "Witaj \(pelneDane)"
+        if !czysteImie.isEmpty && czysteImie.caseInsensitiveCompare(mojeImie) == .orderedSame {
+            return powitanie + "! Mamy to samo imię"
         }
-        return greeting
+        return powitanie
     }
 }
 

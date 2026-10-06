@@ -1,24 +1,24 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var message = "Listening to gestures..."
-    @State private var color: Color = .gray            // default: not white
-    @State private var isShowingDialog = false
-    // true once the user confirmed a colour change; the second view then starts with a random colour.
-    @State private var wasShaken = false
-    @State private var isVisible = true
+    @State private var wiadomosc = "Oczekiwanie na gesty..."
+    @State private var kolor: Color = .gray            // domyślnie: inny niż biały
+    @State private var czyPokazujeDialog = false
+    // true, gdy użytkownik zatwierdzi zmianę koloru; drugi widok startuje wtedy z losowym kolorem.
+    @State private var czyPotrzasnieto = false
+    @State private var czyWidoczny = true
 
     var body: some View {
         NavigationStack {
             VStack {
                 Spacer()
-                Text(message)
+                Text(wiadomosc)
                     .font(.title2)
                     .multilineTextAlignment(.center)
                     .padding(10)
                 Spacer()
-                NavigationLink(destination: SecondView(wasShaken: wasShaken)) {
-                    Text("Go to the second view")
+                NavigationLink(destination: DrugiWidok(czyPotrzasnieto: czyPotrzasnieto)) {
+                    Text("Przejdź do drugiego widoku")
                         .padding(10)
                         .background(Color.blue)
                         .foregroundStyle(.white)
@@ -28,66 +28,66 @@ struct ContentView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .contentShape(Rectangle())
-            .background(color.ignoresSafeArea())
-            .gesture(tapGestures)
-            .onLongPressGesture { message = "Long press!" }
-            .gesture(pinchGesture)
-            .simultaneousGesture(dragGesture)
+            .background(kolor.ignoresSafeArea())
+            .gesture(gestyTapniec)
+            .onLongPressGesture { wiadomosc = "Długie przytrzymanie (Long press)!" }
+            .gesture(gestPinch)
+            .simultaneousGesture(gestPrzeciagania)
             .onReceive(NotificationCenter.default.publisher(for: .deviceDidShakeNotification)) { _ in
-                guard isVisible else { return }
-                message = "Shaken"
-                isShowingDialog = true
+                guard czyWidoczny else { return }
+                wiadomosc = "Potrząśnięto (Shaken)"
+                czyPokazujeDialog = true
             }
             .confirmationDialog(
                 "Do you want to change the background color?",
-                isPresented: $isShowingDialog,
+                isPresented: $czyPokazujeDialog,
                 titleVisibility: .visible
             ) {
                 Button("Yes") {
-                    color = ColorHelper.getRandomColor()
-                    wasShaken = true
+                    kolor = ColorHelper.getRandomColor()
+                    czyPotrzasnieto = true
                 }
                 Button("No", role: .destructive) { }
                 Button("Cancel", role: .cancel) { }
             }
-            .onAppear { isVisible = true }
-            .onDisappear { isVisible = false }
+            .onAppear { czyWidoczny = true }
+            .onDisappear { czyWidoczny = false }
         }
     }
 
-    // Triple > double > single: the higher tap count gets priority.
-    private var tapGestures: some Gesture {
-        let triple = TapGesture(count: 3).onEnded { message = "Triple tap!" }
-        let double = TapGesture(count: 2).onEnded { message = "Double tap!" }
-        let single = TapGesture(count: 1).onEnded { message = "Tap!" }
-        return triple.exclusively(before: double).exclusively(before: single)
+    // Potrójne > podwójne > pojedyncze tapnięcie: wyższa liczba ma priorytet.
+    private var gestyTapniec: some Gesture {
+        let potrojne = TapGesture(count: 3).onEnded { wiadomosc = "Potrójne tapnięcie!" }
+        let podwojne = TapGesture(count: 2).onEnded { wiadomosc = "Podwójne tapnięcie!" }
+        let pojedyncze = TapGesture(count: 1).onEnded { wiadomosc = "Pojedyncze tapnięcie!" }
+        return potrojne.exclusively(before: podwojne).exclusively(before: pojedyncze)
     }
 
-    private var pinchGesture: some Gesture {
+    private var gestPinch: some Gesture {
         MagnifyGesture()
-            .onChanged { value in
-                message = "Pinch! (scale \(String(format: "%.2f", value.magnification)))"
+            .onChanged { wartosc in
+                wiadomosc = "Pinch! (skala \(String(format: "%.2f", wartosc.magnification)))"
             }
             .onEnded { _ in
-                message = "Pinch ended"
+                wiadomosc = "Koniec gestu pinch"
             }
     }
 
-    private var dragGesture: some Gesture {
+    private var gestPrzeciagania: some Gesture {
         DragGesture(minimumDistance: 20)
             .onChanged { _ in
-                message = "Drag..."
+                wiadomosc = "Przeciąganie..."
             }
-            .onEnded { value in
-                message = "Swipe \(direction(of: value.translation))"
+            .onEnded { wartosc in
+                wiadomosc = "Przesunięcie w \(kierunek(przesuniecie: wartosc.translation))"
             }
     }
 
-    private func direction(of translation: CGSize) -> String {
-        if abs(translation.width) > abs(translation.height) {
-            return translation.width > 0 ? "right" : "left"
+    private func kierunek(przesuniecie: CGSize) -> String {
+        if abs(przesuniecie.width) > abs(przesuniecie.height) {
+            return przesuniecie.width > 0 ? "prawo" : "lewo"
         }
-        return translation.height > 0 ? "down" : "up"
+        return przesuniecie.height > 0 ? "dół" : "górę"
     }
 }
 

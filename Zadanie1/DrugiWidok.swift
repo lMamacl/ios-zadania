@@ -1,14 +1,14 @@
 import SwiftUI
 
-struct SecondView: View {
-    @Binding var surname: String
+struct DrugiWidok: View {
+    @Binding var nazwisko: String
 
     var body: some View {
         VStack(spacing: 10) {
-            Text("Your surname")
+            Text("Twoje nazwisko")
                 .padding(10)
 
-            TextField("Surname", text: $surname)
+            TextField("Nazwisko", text: $nazwisko)
                 .textInputAutocapitalization(.words)
                 .autocorrectionDisabled()
                 .padding(10)
@@ -22,5 +22,5 @@ struct SecondView: View {
 }
 
 #Preview {
-    SecondView(surname: .constant("Surname"))
+    DrugiWidok(nazwisko: .constant("Nazwisko"))
 }

@@ -5,8 +5,8 @@ struct PersonDetailView: View {
     @Environment(\.dismiss) private var dismiss
 
     let personID: UUID
-    @State private var showingEdit = false
-    @State private var showingDeleteConfirmation = false
+    @State private var pokazEdycje = false
+    @State private var pokazPotwierdzenieUsuniecia = false
 
     var body: some View {
         Group {
@@ -25,7 +25,7 @@ struct PersonDetailView: View {
                     }
                     Section {
                         Button("Usuń osobę", role: .destructive) {
-                            showingDeleteConfirmation = true
+                            pokazPotwierdzenieUsuniecia = true
                         }
                     }
                 }
@@ -33,15 +33,15 @@ struct PersonDetailView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .primaryAction) {
-                        Button("Edytuj") { showingEdit = true }
+                        Button("Edytuj") { pokazEdycje = true }
                     }
                 }
-                .sheet(isPresented: $showingEdit) {
+                .sheet(isPresented: $pokazEdycje) {
                     PersonFormView(title: "Edytuj osobę", person: person) { store.update($0) }
                 }
                 .confirmationDialog(
                     "Czy na pewno usunąć \(person.fullName)?",
-                    isPresented: $showingDeleteConfirmation,
+                    isPresented: $pokazPotwierdzenieUsuniecia,
                     titleVisibility: .visible
                 ) {
                     Button("Usuń", role: .destructive) {
