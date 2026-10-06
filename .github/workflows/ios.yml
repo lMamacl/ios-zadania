@@ -1,0 +1,60 @@
+name: Build iOS apps
+
+# Runs on pushes to main and on demand (Actions tab -> "Build iOS apps" -> Run workflow).
+# macOS minutes are billed at a higher rate, so avoid pushing tiny commits in a row.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode 16 if the runner still has it
+        run: |
+          XC=$( (ls -d /Applications/Xcode_16*.app 2>/dev/null || true) | sort -V | tail -1 )
+          if [ -n "$XC" ]; then
+            sudo xcode-select -s "$XC"
+          else
+            echo "::warning::No Xcode 16 on this runner, building with the default Xcode"
+          fi
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project, build, run in simulator, take screenshots
+        run: bash scripts/ci_verify.sh
+
+      - name: Upload ready Xcode project (open this one in the lab)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcode-project
+          path: |
+            iOSZadania.xcodeproj
+            Zadanie1
+            Zadanie2
+            Zadanie3
+            Zadanie4
+            project.yml
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: shots
+          if-no-files-found: ignore
+
+      - name: Upload simulator builds (for Appetize.io)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulator-apps
+          path: dist
