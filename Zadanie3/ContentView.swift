@@ -39,16 +39,16 @@ struct ContentView: View {
                 czyPokazujeDialog = true
             }
             .confirmationDialog(
-                "Do you want to change the background color?",
+                "Czy chcesz zmienić kolor tła?",
                 isPresented: $czyPokazujeDialog,
                 titleVisibility: .visible
             ) {
-                Button("Yes") {
+                Button("Tak") {
                     kolor = ColorHelper.getRandomColor()
                     czyPotrzasnieto = true
                 }
-                Button("No", role: .destructive) { }
-                Button("Cancel", role: .cancel) { }
+                Button("Nie", role: .destructive) { }
+                Button("Anuluj", role: .cancel) { }
             }
             .onAppear { czyWidoczny = true }
             .onDisappear { czyWidoczny = false }

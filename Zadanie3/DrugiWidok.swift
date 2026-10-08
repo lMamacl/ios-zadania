@@ -19,8 +19,11 @@ struct DrugiWidok: View {
             Text("Długość (Longitude): \(dlugosc)")
             Text("Adres: \(adres)")
                 .multilineTextAlignment(.center)
-            Button("Get localization") {
+            Button("Pobierz lokalizację") {
                 menedzerLokalizacji.checkLocationAuthorization()
+                if let lokalizacja = menedzerLokalizacji.location {
+                    pokazLokalizacje(lokalizacja)
+                }
             }
             .padding(.top, 10)
         }

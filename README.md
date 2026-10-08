@@ -1,51 +1,98 @@
-# iOS assignments (Zadanie 1-4)
+# Zadania laboratoryjne iOS (Zadanie 1–4)
 
-SwiftUI sources for the four assignments plus a GitHub Actions setup that builds them without a Mac.
-The `.xcodeproj` is not stored in git: XcodeGen generates it from `project.yml`.
+Kompletny zestaw rozwiązań czterech zadań laboratoryjnych w SwiftUI wraz z automatyzacją budowania i testowania w GitHub Actions bez konieczności posiadania lokalnie komputera Mac.
+Plik projektu `.xcodeproj` jest generowany automatycznie przy użyciu narzędzia **XcodeGen** na podstawie specyfikacji `project.yml`.
 
-> **Aktualny stan projektu:** Skonfigurowany na ten moment pod **Zadanie 1** (w `project.yml` oraz `scripts/ci_verify.sh`). Źródła zadań 2–4 znajdują się w repozytorium — aby je aktywować w kolejnych etapach, wystarczy odkomentować je w `project.yml` oraz w `scripts/ci_verify.sh`.
+---
 
-## Workflow
+## 🛠 Wymagania środowiskowe projektu
 
-1. Create the repository yourself, copy these files in, push to `main`.
-2. Actions tab -> **Build iOS apps** (runs on push to `main`, or press *Run workflow*).
-3. When it is green, download the artifacts:
-   - `xcode-project` - ready to open in Xcode (contains `iOSZadania.xcodeproj` with all four schemes)
-   - `screenshots` - every app launched in a simulator (Zadanie 2 in English and Polish)
-   - `simulator-apps` - `ZadanieN-simulator.app.zip`, for Appetize.io
-4. If it is red, open the failed step, copy the compiler error and fix it (or send it to the AI that wrote the code).
-5. In the lab: unzip `xcode-project`, open `iOSZadania.xcodeproj`, pick a scheme (Zadanie1..4) and an iPhone simulator, press Run.
+Projekt został dostosowany i skonfigurowany pod następujące środowisko:
+* **Wersja Xcode:** Xcode 26.1
+* **Docelowy system (Deployment Target):** iOS 26.1 (`IPHONEOS_DEPLOYMENT_TARGET = 26.1`)
+* **Wersja SDK:** iOS 26.1 (`iphonesimulator26.1`)
+* **Symulator domyślny:** `iPhone 18` z systemem iOS 26.1
+* **Tryb języka Swift:** `SWIFT_VERSION = 5.0` (kompilator Swift 6.2 działający w trybie wstecznej zgodności ze Swift 5)
+* **Wszystkie zadania aktywne:** Zadania 1, 2, 3 oraz 4 są włączone do kompilacji w `project.yml` oraz weryfikowane w skrypcie `scripts/ci_verify.sh`.
 
-## Before you present
+---
 
-- **Zadanie 2 logos are placeholders.** Replace `Zadanie2/Assets.xcassets/wi-en.imageset/wi-en.png` and
-  `.../wi-pl.imageset/wi-pl.png` with the real faculty logos (keep the file names).
-- **Xcode version.** The PDFs show iPhone 16 Pro / iOS 18.0, so the lab probably has Xcode 16. Check
-  Xcode -> About Xcode. If it is older than 16, lower `xcodeVersion` in `project.yml`. The CI picks Xcode 16.x
-  when the runner still has it, otherwise its default Xcode (see the warning in the first step).
-- **Zadanie 1:** `myName` in `Zadanie1/ContentView.swift` is the name that triggers "We have the same name".
-- **Zadanie 3:** the second view turns random only after you pressed **Yes** in the shake dialog
-  (variable `wasShaken`). If your instructor expects "any shake", set `wasShaken = true` in the shake handler instead.
-- **Zadanie 4:** the UI is in Polish; data is kept in memory only.
+## 📱 Przegląd zaimplementowanych zadań
 
-## Simulator tips
+Wszystkie aplikacje posiadają interfejs w języku polskim:
 
-- Shake: Device -> Shake (Ctrl+Cmd+Z)
-- Pinch: hold Option and drag
-- Location: Features -> Location -> Apple / Custom Location (otherwise Zadanie 3 shows an error instead of coordinates)
-- Polish version of Zadanie 2: Product -> Scheme -> Edit Scheme -> Run -> Options -> App Language -> Polish
-  (or change the language in the simulator's Settings)
+### Zadanie 1 – Wprowadzenie do iOS i SwiftUI
+* Pola tekstowe na imię i nazwisko z automatyczną aktualizacją powitania na bieżąco (`onChange`).
+* Reakcja na wpisanie wybranego imienia (`mojeImie = "Maciej"`) – wyświetlenie komunikatu `"...! Mamy to samo imię"`.
+* Przycisk przechodzący do drugiego widoku (`DrugiWidok`) ze stylem (zielone tło, zaokrąglone rogi, odstępy 10 px).
+* Dwukierunkowe przekazywanie i edycja nazwiska za pomocą mechanizmu `@Binding` – zmiana w drugim widoku natychmiast aktualizuje powitanie w pierwszym widoku.
 
-## Appetize.io (optional, mainly for Zadanie 3)
+### Zadanie 2 – Umiędzynarodowienie (i18n / l10n)
+* Wyświetlanie logo wydziału (`wi-en` lub `wi-pl`) pobieranego dynamicznie w zależności od języka systemu (`NSLocalizedString("Filename", ...)`).
+* Obsługa języka polskiego i angielskiego za pomocą plików `Localizable.strings` w `en.lproj` oraz `pl.lproj`.
+* Przycisk otwierający okno dialogowe (Alert) ze zlokalizowaną liczbą kierunków studiów (parametr `%i` formatowany z wartością `4`).
 
-Upload `Zadanie3-simulator.app.zip` at appetize.io. The free plan is very limited (short sessions, few minutes per month),
-so use it only where interaction matters. Check on Appetize which shake / location / language controls it offers.
+### Zadanie 3 – Gesty, potrząśnięcie i geolokalizacja
+* Obsługa gestów: pojedyncze tapnięcie, podwójne tapnięcie, potrójne tapnięcie (rozwiązywane priorytetowo), długie przytrzymanie, gest uszczypnięcia (pinch / `MagnifyGesture`) oraz przesunięcie (drag / swipe).
+* Reakcja na potrząśnięcie telefonem (`motionShake`) – wyświetlenie okna `confirmationDialog` z pytaniem o zmianę koloru tła (przyciski *Tak*, *Nie*, *Anuluj*).
+* Drugi widok (`DrugiWidok`):
+  * Domyślnie białe tło (chyba że w pierwszym widoku zatwierdzono losowy kolor).
+  * Potrząśnięcie w drugim widoku bezpośrednio losuje nowy kolor (bez pytania).
+  * Przycisk *Pobierz lokalizację* odpytujący `CLLocationManager` i pobierający adres przez geokodowanie odwrotne (`CLGeocoder`).
 
-## Run the check yourself on a Mac
+### Zadanie 4 – CRUD (Aplikacja zarządzania danymi osób)
+* **Lista osób (Read):** Przegląd rekordów z wyszukiwaniem i usuwaniem (swipe-to-delete).
+* **Szczegóły (Read):** Pełny podgląd danych kontaktowych i osobowych.
+* **Dodawanie i edycja (Create / Update):** Formularz z precyzyjną walidacją.
+* **Usuwanie (Delete):** Potwierdzenie usunięcia w dedykowanym oknie dialogowym.
+* **Kompleksowa walidacja:** Sprawdzanie wymaganych pól (imię, nazwisko, format e-mail, poprawność numeru telefonu, data urodzenia niewybiegająca w przyszłość). Komunikaty błędów widoczne pod polami oraz w zbiorczym alercie.
+* Przechowywanie danych w pamięci (`PersonStore` z `@Published` i `@MainActor`).
 
-`brew install xcodegen && bash scripts/ci_verify.sh` does the same as CI (generate, build, run, screenshots).
+---
 
-## Not verified yet
+## 🚀 Workflow GitHub Actions (Automatyczna kompilacja bez Maca)
 
-The code has not been compiled by anyone yet. The first CI run is the real test, so run it well before the lab.
-Gesture interplay in Zadanie 3 (tap counts vs long press vs drag) should be tried by hand once.
+1. Po wypchnięciu zmian do gałęzi `main` uruchamia się workflow `.github/workflows/ios.yml` na maszynie `macos-26`.
+2. Akcja:
+   * Wybiera środowisko Xcode 26.1.
+   * Instaluje narzędzie XcodeGen (`brew install xcodegen`).
+   * Uruchamia skrypt `scripts/ci_verify.sh`, który:
+     * Generuje projekt `iOSZadania.xcodeproj`.
+     * Kompiluje wszystkie 4 schematy (`Zadanie1`, `Zadanie2`, `Zadanie3`, `Zadanie4`).
+     * Pakuje skompilowane binarki `.app.zip`.
+     * Uruchamia symulator **iPhone 18** (iOS 26.1).
+     * Nadaje uprawnienia lokalizacyjne dla Zadania 3.
+     * Wykonuje zrzuty ekranu dla każdej aplikacji (dla Zadania 2 w języku angielskim i polskim).
+3. Po zakończeniu zadania w zakładce **Actions** dostępne są artefakty do pobrania:
+   * `xcode-project` – kompletny projekt Xcode, gotowy do otwarcia na zajęciach laboratoryjnych.
+   * `screenshots` – zrzuty ekranu potwierdzające poprawne działanie wszystkich aplikacji.
+   * `simulator-apps` – paczki `.app.zip` (przydatne np. do testów online w Appetize.io).
+
+---
+
+## 💻 Uruchomienie lokalne na komputerze Mac
+
+Jeśli masz dostęp do Maca z Xcode:
+```bash
+# 1. Instalacja XcodeGen (jeśli nie posiadasz)
+brew install xcodegen
+
+# 2. Wygenerowanie projektu Xcode
+xcodegen generate
+
+# 3. Uruchomienie pełnej weryfikacji i zrzutów ekranu
+bash scripts/ci_verify.sh
+
+# 4. Otwarcie projektu w Xcode
+open iOSZadania.xcodeproj
+```
+
+---
+
+## 💡 Wskazówki do prezentacji na zajęciach laboratoryjnych
+
+* **Podmiana logotypów w Zadaniu 2:** W katalogu `Zadanie2/Assets.xcassets` umieszczone są grafiki wydziału `wi-en` oraz `wi-pl`.
+* **Symulator – gest potrząśnięcia:** W menu symulatora wybierz `Device` -> `Shake` (skrót `Ctrl + Cmd + Z`).
+* **Symulator – gest pinch:** Przytrzymaj klawisz `Option` (`Alt`) i przeciągnij kursorem.
+* **Symulator – lokalizacja:** W menu symulatora wybierz `Features` -> `Location` -> `Apple` lub `Custom Location`, aby symulator podawał współrzędne GPS.
+* **Symulator – język polski w Zadaniu 2:** W Xcode wejdź w `Product` -> `Scheme` -> `Edit Scheme...` -> `Run` -> `Options` -> `App Language: Polish` (lub zmień język w Ustawieniach symulatora).

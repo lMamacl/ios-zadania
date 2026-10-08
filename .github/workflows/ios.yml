@@ -1,7 +1,6 @@
-name: Build iOS apps
+name: Budowa aplikacji iOS
 
-# Runs on pushes to main and on demand (Actions tab -> "Build iOS apps" -> Run workflow).
-# macOS minutes are billed at a higher rate, so avoid pushing tiny commits in a row.
+# Uruchamia się przy pushu na main oraz na żądanie (zakładka Actions -> "Budowa aplikacji iOS" -> Run workflow).
 on:
   push:
     branches: [main]
@@ -10,28 +9,36 @@ on:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - name: Pobranie kodu repozytorium
+        uses: actions/checkout@v4
 
-      - name: Select Xcode 16 if the runner still has it
+      - name: Wybór środowiska Xcode 26.1
         run: |
-          XC=$( (ls -d /Applications/Xcode_16*.app 2>/dev/null || true) | sort -V | tail -1 )
+          echo "Dostępne wersje Xcode na runnerze:"
+          ls -d /Applications/Xcode*.app || true
+          XC=$( (ls -d /Applications/Xcode_26.1*.app 2>/dev/null || true) | sort -V | tail -1 )
+          if [ -z "$XC" ]; then
+            XC=$( (ls -d /Applications/Xcode_26*.app 2>/dev/null || true) | sort -V | tail -1 )
+          fi
           if [ -n "$XC" ]; then
+            echo "Wybieranie Xcode: $XC"
             sudo xcode-select -s "$XC"
           else
-            echo "::warning::No Xcode 16 on this runner, building with the default Xcode"
+            echo "::warning::Xcode 26.1 nie został znaleziony na tym runnerze, używam domyślnego Xcode."
           fi
           xcodebuild -version
+          xcrun simctl list devicetypes | grep -i "iPhone" || true
 
-      - name: Install XcodeGen
+      - name: Instalacja XcodeGen
         run: brew install xcodegen
 
-      - name: Generate project, build, run in simulator, take screenshots
+      - name: Generowanie projektu, kompilacja, symulator i zrzuty ekranu
         run: bash scripts/ci_verify.sh
 
-      - name: Upload ready Xcode project (open this one in the lab)
+      - name: Zapis projektu Xcode jako artefakt
         if: success()
         uses: actions/upload-artifact@v4
         with:
@@ -44,7 +51,7 @@ jobs:
             Zadanie4
             project.yml
 
-      - name: Upload screenshots
+      - name: Zapis zrzutów ekranu (screenshots)
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -52,7 +59,7 @@ jobs:
           path: shots
           if-no-files-found: ignore
 
-      - name: Upload simulator builds (for Appetize.io)
+      - name: Zapis paczek aplikacji symulatora (simulator-apps)
         if: success()
         uses: actions/upload-artifact@v4
         with:
