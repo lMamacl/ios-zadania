@@ -19,12 +19,14 @@ jobs:
         run: |
           echo "Dostępne wersje Xcode na runnerze:"
           ls -d /Applications/Xcode*.app || true
-          XC=$( (ls -d /Applications/Xcode_26.1*.app 2>/dev/null || true) | sort -V | tail -1 )
+          # Na runnerze macos-26 preinstalowane są runtimes iOS 26.2, 26.4 oraz 26.5.
+          # Wybieramy Xcode 26.2 (ta sama rodzina Xcode 26), który posiada gotowy symulator na maszynie CI.
+          XC=$( (ls -d /Applications/Xcode_26.2*.app 2>/dev/null || true) | sort -V | tail -1 )
           if [ -z "$XC" ]; then
             XC=$( (ls -d /Applications/Xcode_26*.app 2>/dev/null || true) | sort -V | tail -1 )
           fi
           if [ -z "$XC" ]; then
-            XC=$( (ls -d /Applications/Xcode_16*.app 2>/dev/null || true) | sort -V | tail -1 )
+            XC="/Applications/Xcode.app"
           fi
           if [ -n "$XC" ]; then
             echo "Wybieranie Xcode: $XC"
