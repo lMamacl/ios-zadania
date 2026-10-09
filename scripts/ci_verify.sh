@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Generuje projekt Xcode, kompiluje 4 zadania pod iOS Simulator (iOS 26.1 / iPhone 18),
+# Generuje projekt Xcode, kompiluje 4 zadania pod iOS Simulator (iOS 17.0+),
 # uruchamia aplikacje w symulatorze i zapisuje zrzuty ekranu.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -13,7 +13,7 @@ mkdir -p "$ROOT/shots" "$ROOT/dist"
 echo "== Generowanie projektu Xcode (XcodeGen) =="
 xcodegen generate
 
-echo "== Kompilacja aplikacji (Xcode 26.1 / iphonesimulator26.1 / Swift 5.0) =="
+echo "== Kompilacja aplikacji (iOS Simulator / Swift 5.0) =="
 for S in "${SCHEMES[@]}"; do
   echo "--- Kompilacja: $S ---"
   xcodebuild build -quiet \
@@ -27,45 +27,36 @@ for S in "${SCHEMES[@]}"; do
   (cd "$APP_DIR" && zip -qr "$ROOT/dist/$S-simulator.app.zip" "$S.app")
 done
 
-echo "== Wybór symulatora (Preferowany: iPhone 18 z iOS 26.1) =="
-SIM_NAME="${SIM_NAME:-iPhone 18}"
-SIM_RUNTIME="${SIM_RUNTIME:-26.1}"
+echo "== Wybór symulatora =="
 UUID_RE='[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}'
 
-# pick_sim <runtime|any> <name-prefix|any>
-pick_sim() {
-  xcrun simctl list devices available | awk -v rt="$1" -v nm="$2" '
-    index($0, "-- ") == 1 { inrt = (rt == "any" || index($0, "-- iOS " rt " --") == 1); next }
-    inrt && $0 ~ /^    iPhone/ {
-      if (nm == "any" || index($0, "    " nm " (") == 1 || index($0, "    " nm " ") == 1) { print; exit }
-    }' | grep -oE "$UUID_RE" || true
-}
-
-# 1. Sprawdź, czy iPhone 18 pod iOS 26.1 już istnieje
-UDID=$(pick_sim "$SIM_RUNTIME" "$SIM_NAME")
-
-# 2. Jeśli nie istnieje, spróbuj go utworzyć z dostępnego typu urządzenia i runtime
+# 1. Sprawdź, czy istnieje już gotowy, dostępny symulator iPhone
+# Szukamy najpierw nowszych modeli (iPhone 17, 16, 15, 14, SE), a jeśli brak – dowolnego dostępnego iPhone'a
+UDID=$(xcrun simctl list devices available | grep -E "iPhone (17|16|15|14|SE)" | head -n1 | grep -oE "$UUID_RE" || true)
 if [ -z "$UDID" ]; then
-  DEV_TYPE=$(xcrun simctl list devicetypes | grep -m1 "$SIM_NAME" | grep -oE 'com\.apple\.CoreSimulator\.SimDeviceType\.[A-Za-z0-9_-]+' || true)
-  RUNTIME_ID=$(xcrun simctl list runtimes | grep -m1 "iOS $SIM_RUNTIME" | grep -oE 'com\.apple\.CoreSimulator\.SimRuntime\.[A-Za-z0-9_-]+' || true)
+  UDID=$(xcrun simctl list devices available | grep -i "iPhone" | head -n1 | grep -oE "$UUID_RE" || true)
+fi
+
+# 2. Jeśli żaden symulator nie jest jeszcze utworzony/dostępny, utwórz go dynamicznie
+if [ -z "$UDID" ]; then
+  echo "Brak gotowego symulatora iPhone, wyszukiwanie typu urządzenia i runtime..."
+  DEV_TYPE=$(xcrun simctl list devicetypes | grep -E 'iPhone-(17|16|15|SE)' | head -n1 | grep -oE 'com\.apple\.CoreSimulator\.SimDeviceType\.[A-Za-z0-9_-]+' || true)
+  if [ -z "$DEV_TYPE" ]; then
+    DEV_TYPE=$(xcrun simctl list devicetypes | grep -i 'iPhone' | head -n1 | grep -oE 'com\.apple\.CoreSimulator\.SimDeviceType\.[A-Za-z0-9_-]+' || true)
+  fi
+  RUNTIME_ID=$(xcrun simctl list runtimes | grep -E 'com\.apple\.CoreSimulator\.SimRuntime\.iOS' | tail -n1 | grep -oE 'com\.apple\.CoreSimulator\.SimRuntime\.[A-Za-z0-9_-]+' || true)
   if [ -n "$DEV_TYPE" ] && [ -n "$RUNTIME_ID" ]; then
-    echo "Tworzenie symulatora: $SIM_NAME ($DEV_TYPE, $RUNTIME_ID)..."
-    UDID=$(xcrun simctl create "$SIM_NAME" "$DEV_TYPE" "$RUNTIME_ID" || true)
+    echo "Tworzenie symulatora z devicetype: $DEV_TYPE oraz runtime: $RUNTIME_ID..."
+    UDID=$(xcrun simctl create "Test-iPhone" "$DEV_TYPE" "$RUNTIME_ID" || true)
   fi
 fi
 
-# 3. Odporne warianty zapasowe, jeśli dany runner nie ma iPhone 18
-[ -n "$UDID" ] || UDID=$(pick_sim "$SIM_RUNTIME" "$SIM_NAME")
-[ -n "$UDID" ] || UDID=$(pick_sim "$SIM_RUNTIME" any)
-[ -n "$UDID" ] || UDID=$(pick_sim any "$SIM_NAME")
-[ -n "$UDID" ] || UDID=$(pick_sim any any)
-
 if [ -z "$UDID" ]; then
-  echo "::warning::Nie znaleziono symulatora iPhone, pomijanie zrzutów ekranu"
+  echo "::warning::Nie znaleziono ani nie udało się utworzyć symulatora iPhone, pomijanie zrzutów ekranu"
   exit 0
 fi
 
-echo "Użyty symulator: $UDID ($SIM_NAME, iOS $SIM_RUNTIME)"
+echo "Użyty symulator: $UDID"
 xcrun simctl bootstatus "$UDID" -b
 
 for S in "${SCHEMES[@]}"; do

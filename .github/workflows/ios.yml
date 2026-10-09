@@ -15,7 +15,7 @@ jobs:
       - name: Pobranie kodu repozytorium
         uses: actions/checkout@v4
 
-      - name: Wybór środowiska Xcode 26.1
+      - name: Wybór środowiska Xcode
         run: |
           echo "Dostępne wersje Xcode na runnerze:"
           ls -d /Applications/Xcode*.app || true
@@ -23,14 +23,22 @@ jobs:
           if [ -z "$XC" ]; then
             XC=$( (ls -d /Applications/Xcode_26*.app 2>/dev/null || true) | sort -V | tail -1 )
           fi
+          if [ -z "$XC" ]; then
+            XC=$( (ls -d /Applications/Xcode_16*.app 2>/dev/null || true) | sort -V | tail -1 )
+          fi
           if [ -n "$XC" ]; then
             echo "Wybieranie Xcode: $XC"
             sudo xcode-select -s "$XC"
           else
-            echo "::warning::Xcode 26.1 nie został znaleziony na tym runnerze, używam domyślnego Xcode."
+            echo "::warning::Używam domyślnego Xcode na runnerze."
           fi
           xcodebuild -version
-          xcrun simctl list devicetypes | grep -i "iPhone" || true
+          echo "--- Dostępne SDK ---"
+          xcodebuild -showsdks || true
+          echo "--- Runtimes symulatora ---"
+          xcrun simctl list runtimes || true
+          echo "--- Dostępne symulatory iPhone ---"
+          xcrun simctl list devices available | grep -i "iPhone" | head -15 || true
 
       - name: Instalacja XcodeGen
         run: brew install xcodegen

@@ -3,15 +3,15 @@ name: iOSZadania
 options:
   bundleIdPrefix: edu.pb.wi
   developmentLanguage: pl
-  xcodeVersion: "16.0"          # Format pliku projektu (zgodny z Xcode 16.x i nowszymi, w tym Xcode 26.1)
+  xcodeVersion: "16.0"          # Format pliku projektu (zgodny z Xcode 16.x i nowszymi)
   deploymentTarget:
-    iOS: "26.1"                 # IPHONEOS_DEPLOYMENT_TARGET = 26.1
+    iOS: "17.0"                 # IPHONEOS_DEPLOYMENT_TARGET = 17.0 (wymagane przez onChange z 2 parametrami oraz MagnifyGesture)
   createIntermediateGroups: true
 
 settings:
   base:
-    SWIFT_VERSION: "5.0"          # Kompilator Swift 6.2 działający w trybie zgodności ze Swift 5
-    IPHONEOS_DEPLOYMENT_TARGET: "26.1"
+    SWIFT_VERSION: "5.0"          # Kompilator Swift działający w trybie zgodności ze Swift 5
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
     MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: "1"
     CODE_SIGN_STYLE: Automatic

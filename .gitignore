@@ -7,3 +7,5 @@ shots/
 xcuserdata/
 DerivedData/
 .DS_Store
+*.xip
+._*

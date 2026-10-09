@@ -8,11 +8,10 @@ Plik projektu `.xcodeproj` jest generowany automatycznie przy użyciu narzędzia
 ## 🛠 Wymagania środowiskowe projektu
 
 Projekt został dostosowany i skonfigurowany pod następujące środowisko:
-* **Wersja Xcode:** Xcode 26.1
-* **Docelowy system (Deployment Target):** iOS 26.1 (`IPHONEOS_DEPLOYMENT_TARGET = 26.1`)
-* **Wersja SDK:** iOS 26.1 (`iphonesimulator26.1`)
-* **Symulator domyślny:** `iPhone 18` z systemem iOS 26.1
-* **Tryb języka Swift:** `SWIFT_VERSION = 5.0` (kompilator Swift 6.2 działający w trybie wstecznej zgodności ze Swift 5)
+* **Wersja Xcode:** Xcode 16.0+ / Xcode 26.1 (na runnerze `macos-26`)
+* **Docelowy system (Deployment Target):** iOS 17.0 (`IPHONEOS_DEPLOYMENT_TARGET = 17.0`, wymagane przez `onChange` z 2 parametrami oraz `MagnifyGesture`; kompatybilne z nowszymi wersjami iOS)
+* **Symulator:** Wybierany dynamicznie z dostępnych na maszynie (np. iPhone 17, 16, 15)
+* **Tryb języka Swift:** `SWIFT_VERSION = 5.0` (kompatybilność ze Swift 5 i 6 w trybie zgodności)
 * **Wszystkie zadania aktywne:** Zadania 1, 2, 3 oraz 4 są włączone do kompilacji w `project.yml` oraz weryfikowane w skrypcie `scripts/ci_verify.sh`.
 
 ---
@@ -54,13 +53,13 @@ Wszystkie aplikacje posiadają interfejs w języku polskim:
 
 1. Po wypchnięciu zmian do gałęzi `main` uruchamia się workflow `.github/workflows/ios.yml` na maszynie `macos-26`.
 2. Akcja:
-   * Wybiera środowisko Xcode 26.1.
+   * Wybiera odpowiednie środowisko Xcode (np. Xcode 26.1).
    * Instaluje narzędzie XcodeGen (`brew install xcodegen`).
    * Uruchamia skrypt `scripts/ci_verify.sh`, który:
      * Generuje projekt `iOSZadania.xcodeproj`.
      * Kompiluje wszystkie 4 schematy (`Zadanie1`, `Zadanie2`, `Zadanie3`, `Zadanie4`).
      * Pakuje skompilowane binarki `.app.zip`.
-     * Uruchamia symulator **iPhone 18** (iOS 26.1).
+     * Uruchamia dostępny symulator **iPhone** (np. iPhone 17 / 16 / 15).
      * Nadaje uprawnienia lokalizacyjne dla Zadania 3.
      * Wykonuje zrzuty ekranu dla każdej aplikacji (dla Zadania 2 w języku angielskim i polskim).
 3. Po zakończeniu zadania w zakładce **Actions** dostępne są artefakty do pobrania:
